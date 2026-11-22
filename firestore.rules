@@ -1,0 +1,289 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: default deny everything
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Health connection probe document
+    match /test/connection {
+      allow get: if true;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isOwner(ownerUid) {
+      return isSignedIn() && request.auth.uid == ownerUid;
+    }
+
+    // Zero-DB-read bootstrap admin check safe for list queries (Pillar 8 Cost Guard)
+    function isBootstrapAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'Gelasemi@gmail.com';
+    }
+
+    // Full admin check for single-doc reads and writes
+    function isAdmin() {
+      return isVerifiedUser() && (
+        request.auth.token.email == 'Gelasemi@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidLanguage(lang) {
+      return lang is string && lang in ['fr', 'en', 'sw', 'es', 'ar', 'zh', 'pt', 'hi', 'ru'];
+    }
+
+    function isValidUserProfile(data, targetUid) {
+      return data.keys().hasAll(['uid', 'displayName', 'role', 'organization', 'language', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'role', 'organization', 'language', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.uid == targetUid
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 120
+        && data.role is string && data.role in ['director', 'analyst', 'cooperative']
+        && data.organization is string && data.organization.size() >= 1 && data.organization.size() <= 140
+        && isValidLanguage(data.language)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPrivateInfo(data, targetUid) {
+      return data.keys().hasAll(['uid', 'email', 'lastLoginAt'])
+        && data.keys().hasOnly(['uid', 'email', 'lastLoginAt'])
+        && isValidId(data.uid)
+        && data.uid == targetUid
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 180
+        && data.lastLoginAt is timestamp;
+    }
+
+    function isValidSavedAnalysis(data, docId) {
+      return data.keys().hasAll(['id', 'ownerUid', 'roleTag', 'scope', 'regionName', 'year', 'scenario', 'summary', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'ownerUid', 'roleTag', 'scope', 'regionName', 'year', 'scenario', 'summary', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && data.id == docId
+        && isValidId(data.ownerUid)
+        && data.roleTag is string && data.roleTag in ['director', 'analyst', 'cooperative']
+        && data.scope is string && data.scope.size() >= 1 && data.scope.size() <= 60
+        && data.regionName is string && data.regionName.size() >= 1 && data.regionName.size() <= 140
+        && data.year is number && data.year >= 2026 && data.year <= 2035
+        && data.scenario is string && data.scenario in ['s1', 's2', 's3', 'baseline', 'severe', 'adaptation']
+        && data.summary is string && data.summary.size() >= 1 && data.summary.size() <= 2500
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidChatLog(data, docId) {
+      return data.keys().hasAll(['id', 'ownerUid', 'roleId', 'zoneName', 'prompt', 'reply', 'createdAt'])
+        && data.keys().hasOnly(['id', 'ownerUid', 'roleId', 'zoneName', 'prompt', 'reply', 'createdAt'])
+        && isValidId(data.id)
+        && data.id == docId
+        && isValidId(data.ownerUid)
+        && data.roleId is string && data.roleId in ['agronome', 'economiste', 'humanitaire']
+        && data.zoneName is string && data.zoneName.size() >= 1 && data.zoneName.size() <= 140
+        && data.prompt is string && data.prompt.size() >= 1 && data.prompt.size() <= 1500
+        && data.reply is string && data.reply.size() >= 1 && data.reply.size() <= 4000
+        && data.createdAt is timestamp;
+    }
+
+    function isValidCooperativeDossier(data, docId) {
+      return data.keys().hasAll(['id', 'ownerUid', 'cooperativeName', 'district', 'crop', 'requestedMUsd', 'status', 'reviewNote', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'ownerUid', 'cooperativeName', 'district', 'crop', 'requestedMUsd', 'status', 'reviewNote', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && data.id == docId
+        && isValidId(data.ownerUid)
+        && data.cooperativeName is string && data.cooperativeName.size() >= 2 && data.cooperativeName.size() <= 140
+        && data.district is string && data.district.size() >= 2 && data.district.size() <= 100
+        && data.crop is string && data.crop.size() >= 2 && data.crop.size() <= 80
+        && data.requestedMUsd is number && data.requestedMUsd >= 0 && data.requestedMUsd <= 500
+        && data.status is string && data.status in ['draft', 'submitted', 'approved', 'rejected']
+        && data.reviewNote is string && data.reviewNote.size() <= 600
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSyncSnapshot(data, docId) {
+      return data.keys().hasAll(['id', 'ownerUid', 'triggeredBy', 'midnightEnabled', 'oniIndex', 'countriesUpdated', 'scrapedSourcesCount', 'summary', 'createdAt'])
+        && data.keys().hasOnly(['id', 'ownerUid', 'triggeredBy', 'midnightEnabled', 'oniIndex', 'countriesUpdated', 'scrapedSourcesCount', 'summary', 'createdAt'])
+        && isValidId(data.id)
+        && data.id == docId
+        && isValidId(data.ownerUid)
+        && data.triggeredBy is string && data.triggeredBy in ['manual', 'midnight-cron']
+        && data.midnightEnabled is bool
+        && data.oniIndex is number && data.oniIndex >= -5 && data.oniIndex <= 8
+        && data.countriesUpdated is number && data.countriesUpdated >= 1 && data.countriesUpdated <= 250
+        && data.scrapedSourcesCount is number && data.scrapedSourcesCount >= 0 && data.scrapedSourcesCount <= 50
+        && data.summary is string && data.summary.size() >= 1 && data.summary.size() <= 2500
+        && data.createdAt is timestamp;
+    }
+
+    // Trusted Admin Registry
+    match /admins/{uid} {
+      allow get: if isValidId(uid) && (isOwner(uid) || isAdmin());
+      allow list: if isBootstrapAdmin();
+      allow create, update, delete: if isValidId(uid) && isAdmin();
+    }
+
+    // User Profiles (non-PII workspace metadata)
+    match /users/{uid} {
+      allow get: if isValidId(uid) && (isOwner(uid) || isAdmin());
+      allow list: if isBootstrapAdmin();
+
+      // Prevent self-assigned 'director' role unless caller is verified admin
+      allow create: if isValidId(uid)
+        && isVerifiedUser()
+        && isOwner(uid)
+        && isValidUserProfile(incoming(), uid)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && (incoming().role in ['analyst', 'cooperative'] || isAdmin());
+
+      allow update: if isValidId(uid)
+        && isVerifiedUser()
+        && isValidUserProfile(incoming(), uid)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          (
+            isOwner(uid)
+            && incoming().role == existing().role
+            && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'organization', 'language', 'updatedAt'])
+          )
+        );
+
+      allow delete: if isValidId(uid) && isAdmin();
+
+      // Strictly owner-isolated PII subcollection
+      match /private/{infoDoc} {
+        allow get: if isValidId(uid) && isValidId(infoDoc) && (isOwner(uid) || isAdmin());
+        allow list: if false;
+        allow create, update: if isValidId(uid)
+          && isValidId(infoDoc)
+          && infoDoc == 'info'
+          && isVerifiedUser()
+          && isOwner(uid)
+          && isValidPrivateInfo(incoming(), uid)
+          && incoming().lastLoginAt == request.time;
+        allow delete: if isValidId(uid) && isValidId(infoDoc) && isAdmin();
+      }
+    }
+
+    // Saved Multi-Scale Analyses
+    match /analyses/{analysisId} {
+      allow get: if isValidId(analysisId) && (isOwner(existing().ownerUid) || isAdmin());
+      allow list: if isSignedIn() && (existing().ownerUid == request.auth.uid || isBootstrapAdmin());
+
+      allow create: if isValidId(analysisId)
+        && isVerifiedUser()
+        && isValidSavedAnalysis(incoming(), analysisId)
+        && incoming().ownerUid == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isValidId(analysisId)
+        && isVerifiedUser()
+        && isValidSavedAnalysis(incoming(), analysisId)
+        && incoming().id == existing().id
+        && incoming().ownerUid == existing().ownerUid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          (
+            isOwner(existing().ownerUid)
+            && incoming().diff(existing()).affectedKeys().hasOnly(['regionName', 'summary', 'scenario', 'year', 'scope', 'updatedAt'])
+          )
+        );
+
+      allow delete: if isValidId(analysisId) && (isOwner(existing().ownerUid) || isAdmin());
+    }
+
+    // Persistent Gemini / Babakoto Conversation Logs
+    match /chat_logs/{logId} {
+      allow get: if isValidId(logId) && (isOwner(existing().ownerUid) || isAdmin());
+      allow list: if isSignedIn() && (existing().ownerUid == request.auth.uid || isBootstrapAdmin());
+
+      allow create: if isValidId(logId)
+        && isVerifiedUser()
+        && isValidChatLog(incoming(), logId)
+        && incoming().ownerUid == request.auth.uid
+        && incoming().createdAt == request.time;
+
+      allow update: if false;
+      allow delete: if isValidId(logId) && (isOwner(existing().ownerUid) || isAdmin());
+    }
+
+    // Cooperative Resilience Dossiers (State Machine + Terminal State Locking)
+    match /cooperative_dossiers/{dossierId} {
+      allow get: if isValidId(dossierId) && (isOwner(existing().ownerUid) || isAdmin());
+      allow list: if isSignedIn() && (existing().ownerUid == request.auth.uid || isBootstrapAdmin());
+
+      allow create: if isValidId(dossierId)
+        && isVerifiedUser()
+        && isValidCooperativeDossier(incoming(), dossierId)
+        && incoming().ownerUid == request.auth.uid
+        && incoming().status in ['draft', 'submitted']
+        && incoming().reviewNote == ''
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isValidId(dossierId)
+        && isVerifiedUser()
+        && isValidCooperativeDossier(incoming(), dossierId)
+        && incoming().id == existing().id
+        && incoming().ownerUid == existing().ownerUid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          (
+            isOwner(existing().ownerUid)
+            && existing().status in ['draft', 'submitted']
+            && incoming().status in ['draft', 'submitted']
+            && incoming().reviewNote == existing().reviewNote
+            && incoming().diff(existing()).affectedKeys().hasOnly(['cooperativeName', 'district', 'crop', 'requestedMUsd', 'status', 'updatedAt'])
+          )
+        );
+
+      allow delete: if isValidId(dossierId) && (
+        isAdmin() ||
+        (isOwner(existing().ownerUid) && existing().status == 'draft')
+      );
+    }
+
+    // Global Midnight & Manual Web-Scrape Sync Snapshots (Immutable Audit Log)
+    match /sync_snapshots/{snapshotId} {
+      allow get: if isValidId(snapshotId) && (isOwner(existing().ownerUid) || isAdmin());
+      allow list: if isSignedIn() && (existing().ownerUid == request.auth.uid || isBootstrapAdmin());
+
+      allow create: if isValidId(snapshotId)
+        && isVerifiedUser()
+        && isValidSyncSnapshot(incoming(), snapshotId)
+        && incoming().ownerUid == request.auth.uid
+        && incoming().createdAt == request.time;
+
+      allow update: if false;
+      allow delete: if isValidId(snapshotId) && (isOwner(existing().ownerUid) || isAdmin());
+    }
+  }
+}

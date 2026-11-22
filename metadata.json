@@ -1,0 +1,6 @@
+{
+  "name": "Observatoire ENSO 2026–2027",
+  "description": "Dossier climatique, agricole et humanitaire sur le super El Niño 2026–2027 : mécanismes océaniques, impacts en Afrique et à Madagascar, calendriers FOFIFA et guichets pour coopératives.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

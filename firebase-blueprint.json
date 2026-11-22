@@ -1,0 +1,311 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Public/workspace profile and assigned observatory role (no PII).",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "role": {
+          "type": "string",
+          "enum": ["director", "analyst", "cooperative"]
+        },
+        "organization": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "language": {
+          "type": "string",
+          "enum": ["fr", "en", "sw", "es", "ar", "zh", "pt", "hi", "ru"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "role", "organization", "language", "createdAt", "updatedAt"]
+    },
+    "UserPrivateInfo": {
+      "title": "UserPrivateInfo",
+      "description": "Strictly owner-isolated PII record storing user email and login audit timestamp.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 180
+        },
+        "lastLoginAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "lastLoginAt"]
+    },
+    "AdminEntry": {
+      "title": "AdminEntry",
+      "description": "Trusted role registry for M&G Consulting executive governance.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "grantedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "grantedAt"]
+    },
+    "SavedAnalysis": {
+      "title": "SavedAnalysis",
+      "description": "Persisted multi-scale ENSO economic/climate snapshot saved by an authenticated user.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "roleTag": {
+          "type": "string",
+          "enum": ["director", "analyst", "cooperative"]
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "regionName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "year": {
+          "type": "number"
+        },
+        "scenario": {
+          "type": "string",
+          "enum": ["s1", "s2", "s3", "baseline", "severe", "adaptation"]
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "ownerUid", "roleTag", "scope", "regionName", "year", "scenario", "summary", "createdAt", "updatedAt"]
+    },
+    "ChatLog": {
+      "title": "ChatLog",
+      "description": "Persisted Gemini / Babakoto climate-agronomy conversation entry.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "roleId": {
+          "type": "string",
+          "enum": ["agronome", "economiste", "humanitaire"]
+        },
+        "zoneName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1500
+        },
+        "reply": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "ownerUid", "roleId", "zoneName", "prompt", "reply", "createdAt"]
+    },
+    "CooperativeDossier": {
+      "title": "CooperativeDossier",
+      "description": "Cooperative FDA-R / DEFIS climate adaptation financing dossier with state-machine review.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "cooperativeName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 140
+        },
+        "district": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "crop": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "requestedMUsd": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "submitted", "approved", "rejected"]
+        },
+        "reviewNote": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "ownerUid", "cooperativeName", "district", "crop", "requestedMUsd", "status", "reviewNote", "createdAt", "updatedAt"]
+    },
+    "GlobalSyncSnapshot": {
+      "title": "GlobalSyncSnapshot",
+      "description": "Persisted midnight/manual global web-scrape recalibration snapshot across 195 UN countries and Madagascar.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "triggeredBy": {
+          "type": "string",
+          "enum": ["manual", "midnight-cron"]
+        },
+        "midnightEnabled": {
+          "type": "boolean"
+        },
+        "oniIndex": {
+          "type": "number"
+        },
+        "countriesUpdated": {
+          "type": "number"
+        },
+        "scrapedSourcesCount": {
+          "type": "number"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "ownerUid", "triggeredBy", "midnightEnabled", "oniIndex", "countriesUpdated", "scrapedSourcesCount", "summary", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User workspace metadata and assigned role (PII excluded)."
+    },
+    "/users/{uid}/private/{infoDoc}": {
+      "schema": { "$ref": "#/entities/UserPrivateInfo" },
+      "description": "Owner-isolated PII document containing email and login timestamp."
+    },
+    "/admins/{uid}": {
+      "schema": { "$ref": "#/entities/AdminEntry" },
+      "description": "Trusted administrator lookup documents."
+    },
+    "/analyses/{analysisId}": {
+      "schema": { "$ref": "#/entities/SavedAnalysis" },
+      "description": "Persisted multi-scale climate & economic snapshots owned by users."
+    },
+    "/chat_logs/{logId}": {
+      "schema": { "$ref": "#/entities/ChatLog" },
+      "description": "Persisted Gemini / Babakoto conversation entries owned by users."
+    },
+    "/cooperative_dossiers/{dossierId}": {
+      "schema": { "$ref": "#/entities/CooperativeDossier" },
+      "description": "Cooperative resilience grant dossiers submitted for analyst/director review."
+    },
+    "/sync_snapshots/{snapshotId}": {
+      "schema": { "$ref": "#/entities/GlobalSyncSnapshot" },
+      "description": "Persisted global midnight/manual telemetry scraping and recalibration logs."
+    }
+  }
+}

@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Fraunces", Georgia, Cambria, "Times New Roman", serif;
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    background-color: #F9F8F4;
+    color: #18181B;
+  }
+
+  h1, h2, .font-display {
+    font-family: var(--font-serif);
+    text-wrap: balance;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes indri-breathe {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-3px) scale(1.018);
+  }
+}
+
+@keyframes indri-compute-bob {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg) scale(1.02);
+  }
+  25% {
+    transform: translateY(-5px) rotate(-3deg) scale(1.06);
+  }
+  50% {
+    transform: translateY(1px) rotate(0deg) scale(1.03);
+  }
+  75% {
+    transform: translateY(-4px) rotate(3deg) scale(1.06);
+  }
+}
+
+@keyframes indri-listen-perk {
+  0%, 100% {
+    transform: translateY(-1px) rotate(-1.5deg) scale(1.03);
+  }
+  50% {
+    transform: translateY(-4px) rotate(1.5deg) scale(1.05);
+  }
+}
+
+@keyframes indri-speak-bounce {
+  0%, 100% {
+    transform: translateY(0px) scale(1.03);
+  }
+  50% {
+    transform: translateY(-6px) scale(1.08);
+  }
+}
+
+@keyframes indri-orbit-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes indri-halo-pulse {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.04);
+  }
+}
+
+.indri-state-idle {
+  animation: indri-breathe 3.8s ease-in-out infinite;
+}
+
+.indri-state-processing {
+  animation: indri-compute-bob 0.72s ease-in-out infinite;
+}
+
+.indri-state-listening {
+  animation: indri-listen-perk 1.4s ease-in-out infinite;
+}
+
+.indri-state-speaking {
+  animation: indri-speak-bounce 0.44s ease-in-out infinite;
+}
+
+.indri-ring-spin {
+  animation: indri-orbit-spin 2.2s linear infinite;
+}
+
+.indri-halo-pulse {
+  animation: indri-halo-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes shrinkX {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
